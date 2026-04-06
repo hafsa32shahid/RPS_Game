@@ -40,13 +40,40 @@ const GenrateOtp = () => {
         }
     }, [expired]);
     
+
+    //---------  All focus input handling -----------//
     // focus of input handle
     function handleFocus(e,index){
         let value = e.target.value;
         if(value.length === 1 && index < inputRef.current.length - 1 ){
             inputRef.current[index].classList.remove('otp-input-focus')
             inputRef.current[index + 1].classList.add('otp-input-focus');
+            inputRef.current[index + 1].focus()
         }
+    }
+    
+    // on click handle focus
+    function AddFocus(index){
+      if(inputRef.current){
+        // remove all previous focus
+        inputRef.current.forEach((input)=>input.classList.remove('otp-input-focus'))
+        // add focus on current click
+        inputRef.current[index].classList.add('otp-input-focus');
+      }
+    }
+    // handling backspace key
+    function handleBackward(e,index){
+      if(e.key === 'Backspace'){
+       if(inputRef.current[index].value === '' && index > 0){
+         // remove all previous focus
+        inputRef.current.forEach((input)=>input.classList.remove('otp-input-focus'))
+        // add focus on current click
+        inputRef.current[index -1].classList.add('otp-input-focus');
+        inputRef.current[index - 1].focus();
+        // remove current index value for backspace keyword
+        inputRef.current[index].value = ''
+       }
+      }
     }
     // otp validator 
     function ValidateOtp(){
@@ -56,8 +83,10 @@ const GenrateOtp = () => {
        }
        if(otpValidateValue === otp && expired != true){
          console.log("validated")
+         alert("otp is successfully Validated")
        }else{
         console.log("your otp is Expired or not valid")
+         alert("your otp is Expired or not valid")
        }
     }
 
@@ -78,10 +107,10 @@ const GenrateOtp = () => {
                     <div className='rounded d-flex my-4 align-items-center justify-content-center flex-column' style={{ width: '450px', height: '300px', backgroundColor: '#141617' }}>
                         <h1 className='text-white fw-bold'>OTP Validator</h1>
                         <div className="d-flex gap-2">
-                            <input ref={(el)=>{inputRef.current[0]=el}} onChange={(e)=>handleFocus(e,0)} maxLength="1" className="otp-input" />
-                            <input ref={(el)=>{inputRef.current[1]=el}} onChange={(e)=>handleFocus(e,1)}  maxLength="1" className="otp-input" />
-                            <input ref={(el)=>{inputRef.current[2]=el}} onChange={(e)=>handleFocus(e,2)}  maxLength="1" className="otp-input" />
-                            <input ref={(el)=>{inputRef.current[3]=el}} onChange={(e)=>handleFocus(e,3)} maxLength="1" className="otp-input" />
+                            <input ref={(el)=>{inputRef.current[0]=el}} onKeyDown={(e)=>handleBackward(e,0)} onClick={()=>AddFocus(0)} onChange={(e)=>handleFocus(e,0)} maxLength="1" className="otp-input" />
+                            <input ref={(el)=>{inputRef.current[1]=el}} onKeyDown={(e)=>handleBackward(e,1)} onClick={()=>AddFocus(1)} onChange={(e)=>handleFocus(e,1)}  maxLength="1" className="otp-input" />
+                            <input ref={(el)=>{inputRef.current[2]=el}} onKeyDown={(e)=>handleBackward(e,2)} onClick={()=>AddFocus(2)} onChange={(e)=>handleFocus(e,2)}  maxLength="1" className="otp-input" />
+                            <input ref={(el)=>{inputRef.current[3]=el}} onKeyDown={(e)=>handleBackward(e,3)} onClick={()=>AddFocus(3)} onChange={(e)=>handleFocus(e,3)} maxLength="1" className="otp-input" />
                         </div>
                         <button onClick={ValidateOtp} className='btn btn-primary my-4'>Validate Otp</button>
                     </div>
