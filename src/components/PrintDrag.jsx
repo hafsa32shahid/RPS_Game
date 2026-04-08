@@ -1,34 +1,47 @@
 import React, { useRef, useState } from 'react'
 
 const PrintDrag = () => {
-   let canvasRef = useRef();
-   let [drawing,setDrawing] = useState(false);
-  
-   function startDrawing(e){
-      setDrawing(true);
-      draw(e)
-   }
+  let canvasRef = useRef();
+  let [drawing, setDrawing] = useState(false);
+  let [weight, setWeight] = useState(1);
 
-   function draw(e){
-    if(!drawing) return
+
+  function startDrawing(e) {
+    setDrawing(true);
     let canvas = canvasRef.current;
-     const ctx = canvas.getContext("2d");
-     ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
-    //  ctx.arc(e.nativeEvent.offsetX,  e.nativeEvent.offsetY, 10, 0, 2 * Math.PI);
-     console.log(e.nativeEvent.offsetX, e.nativeEvent.offsetY)
-    //  ctx.arc()
-     ctx.stroke()
+    const ctx = canvas.getContext("2d");
 
-   }
-   function stopDrwaying(){
+    ctx.beginPath();
+    ctx.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+  }
+
+  function draw(e) {
+    if (!drawing) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    ctx.lineWidth = weight
+    ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+    ctx.stroke();
+  }
+  function stopDrwaying() {
     setDrawing(false)
-   }
+  }
   return (
     <>
-      <div className="container bg-white" style={{height:'100vh'}}>
-        <canvas ref={canvasRef} style={{height:'500px',width:'500px',backgroundColor:'red'}} onMouseLeave={(e)=>{stopDrwaying()}} onMouseDown={(e)=>{startDrawing(e)}} >
-            
+      <div className="bg-white" style={{ height: '100vh' }}>
+       <div className="d-flex align-items-center justify-content-center flex-column" style={{height:'100%'}}>
+         <h1 className='text-center fw-bold'>Sketching Page</h1>
+         
+         <canvas ref={canvasRef} width={window.innerWidth} height={600} style={{ height: '600px', backgroundColor: 'grey',borderRadius:'20px' }} onMouseUp={(e) => { stopDrwaying() }} onMouseDown={(e) => { startDrawing(e) }} onMouseMove={(e) => { draw(e) }} >
         </canvas>
+
+        <div className='p-5 bg-success mt-3 rounded-5' style={{minWidth:'400px',height:'100px'}}>
+            <button type="button" class="btn btn-secondary" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Top popover">
+  Popover on top
+</button>
+        </div>
+       </div>
       </div>
     </>
   )
