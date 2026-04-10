@@ -2,10 +2,21 @@ import React, { useRef, useState, useEffect } from 'react'
 
 const PrintDrag = () => {
   let canvasRef = useRef();
+  // saving current canvas
+  const history = useRef([]);
+  const currentIndex = useRef(-1);
+  let sizeBoxRef = useRef();
+  let colorBoxRef = useRef();
   let [drawing, setDrawing] = useState(false);
   let [brushWeight, setbrushWeight] = useState(1);
   // box sizing toggle
   let [boxSizing, setBoxSizing] = useState(false);
+  //color box toggle
+  let [colorBox, setColorBox] = useState(false);
+  // erase toggle
+  let [erase, setErase] = useState(false);
+  // paint color toggle
+  let [color, setColor] = useState("black");
 
 
 
@@ -23,19 +34,71 @@ const PrintDrag = () => {
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    ctx.lineWidth = brushWeight
-    ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
-    ctx.stroke();
+    ctx.lineWidth = brushWeight;
+    if (erase) {
+      ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+      ctx.strokeStyle = "grey"
+      ctx.stroke();
+    } else {
+      ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+      ctx.strokeStyle = color
+      ctx.stroke();
+    }
+
   }
   function stopDrwaying() {
     setDrawing(false)
+    // saving history of canvas 
+    const canvas = canvasRef.current;
+    history.current.push(canvasRef.current.toDataURL());
+    currentIndex.current = history.current.length - 1;
   }
   useEffect(() => {
-    const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
-    popoverTriggerList.forEach((popoverTriggerEl) => {
-      new Popover(popoverTriggerEl)
-    })
+    function handleClick(e) {
+      if (sizeBoxRef.current && !sizeBoxRef.current.contains(e.target)) {
+        setBoxSizing(false);
+      }
+
+      if (colorBoxRef.current && !colorBoxRef.current.contains(e.target)) {
+        setColorBox(false);
+      }
+    }
+
+    function handleBack(imageData) {
+      const canvas = canvasRef.current;
+      let ctx = canvas.getContext('2d');
+
+      const img = new Image();
+
+      img.src = imageData;
+
+      img.onload = ()=>{
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0)
+      }
+
+    }
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === "z") {
+        if (currentIndex.current > 0) {
+          currentIndex.current--;
+          handleBack(history.current[currentIndex.current]);
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+
+    document.addEventListener("click", handleClick)
+
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
   }, [])
+
+
+
   return (
     <>
       <div className="bg-white" style={{ height: '100vh' }}>
@@ -47,78 +110,86 @@ const PrintDrag = () => {
 
           <div className='p-5 position-relative bg-success mt-3 rounded-5 gap-3 d-flex align-items-center justify-content-center' style={{ minWidth: '400px', height: '100px' }}>
             {/* brush size Box */}
-            {boxSizing && (
-              <div className='box'>
-                <div
-                  className="border rounded shadow p-3 mt-2 bg-white position-absolute hidden"
-                  style={{ width: '250px' ,top:"-90px"}}
-                >
-                  <h6>Select Brush Size</h6>
+            <div ref={sizeBoxRef}>
+              <button className='btn btn-info btn-lg' onClick={(e) => { setBoxSizing(!boxSizing) }}>
+                <i className="fa-solid fa-paintbrush"></i>
+              </button>
 
-                  <input
-                    type="range"
-                    min="1"
-                    max="50"
-                    value={brushWeight}
-                    onChange={(e) => setbrushWeight(e.target.value)}
-                    className="form-range"
-                  />
-
-                  <p>Selected Size: "{brushWeight}"px</p>
-
+              {boxSizing && (
+                <div className='box'>
                   <div
-                  className="border rounded-circle mx-auto"
-                  style={{
-                    width: `${brushWeight}px`,
-                    height: `${brushWeight}px`,
-                    backgroundColor: 'black'
-                  }}
-                />
+                    className="border rounded shadow p-3 mt-2 bg-white position-absolute hidden"
+                    style={{ width: '250px', top: "-90px" }}
+                  >
+                    <h6>Select Brush Size</h6>
+
+                    <input
+                      type="range"
+                      min="1"
+                      max="50"
+                      value={brushWeight}
+                      onChange={(e) => setbrushWeight(e.target.value)}
+                      className="form-range"
+                    />
+
+                    <p>Selected Size: "{brushWeight}"px</p>
+
+                    <div
+                      className="border rounded-circle mx-auto"
+                      style={{
+                        width: `${brushWeight}px`,
+                        height: `${brushWeight}px`,
+                        backgroundColor: 'black'
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            <button className='btn btn-info btn-lg' onClick={(e) => { setBoxSizing(!boxSizing) }}>
-              <i class="fa-solid fa-paintbrush"></i>
+
+
+            <button className='btn btn-light btn-lg' onClick={(e) => { setErase(!erase) }}>
+              <i className="fa-solid fa-eraser"></i>
             </button>
+            {/* brush size Box */}
+            <div ref={colorBoxRef}>
+              <button className='btn btn-warning btn-lg' onClick={(e) => { setColorBox(!colorBox) }}>
+                <i className="fa-solid fa-palette"></i>
+              </button>
 
-              {/* brush size Box */}
-            {boxSizing && (
-              <div className='box'>
-                <div
-                  className="border rounded shadow p-3 mt-2 bg-white position-absolute hidden"
-                  style={{ width: '250px' ,top:"-90px"}}
-                >
-                  <h6>Select Brush Size</h6>
-
-                  <input
-                    type="range"
-                    min="1"
-                    max="50"
-                    value={brushWeight}
-                    onChange={(e) => setbrushWeight(e.target.value)}
-                    className="form-range"
-                  />
-
-                  <p>Selected Size: "{brushWeight}"px</p>
-
+              {colorBox && (
+                <div className='box'>
                   <div
-                  className="border rounded-circle mx-auto"
-                  style={{
-                    width: `${brushWeight}px`,
-                    height: `${brushWeight}px`,
-                    backgroundColor: 'black'
-                  }}
-                />
+                    className="border rounded shadow p-3 mt-2 bg-white position-absolute hidden"
+                    style={{ width: '250px', top: "-90px" }}
+                  >
+                    <h6>Select Brush Size</h6>
+
+                    <input
+                      type="color"
+                      min="1"
+                      max="50"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      className="form-range"
+                    />
+
+                    <p>Selected Size: "{brushWeight}"px</p>
+
+                    <div
+                      className="border rounded-circle mx-auto"
+                      style={{
+                        width: `${brushWeight}px`,
+                        height: `${brushWeight}px`,
+                        backgroundColor: 'black'
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-            <button className='btn btn-info btn-lg'>
-              <i class="fa-solid fa-paintbrush"></i>
-            </button>
-            <button className='btn btn-info btn-lg'>
-              <i class="fa-solid fa-paintbrush"></i>
-            </button>
+              )}
+            </div>
+
           </div>
         </div>
       </div>
