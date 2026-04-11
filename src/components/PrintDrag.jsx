@@ -19,7 +19,7 @@ const PrintDrag = () => {
   let [color, setColor] = useState("black");
 
 
-
+// start the drawing when click on canvas
   function startDrawing(e) {
     setDrawing(true);
     let canvas = canvasRef.current;
@@ -28,7 +28,7 @@ const PrintDrag = () => {
     ctx.beginPath();
     ctx.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
   }
-
+// draw the drawing when move after click on canvas
   function draw(e) {
     if (!drawing) return;
 
@@ -46,6 +46,7 @@ const PrintDrag = () => {
     }
 
   }
+  //  stop drawing when click up mean when click leave click state 
   function stopDrwaying() {
     setDrawing(false)
     // saving history of canvas 
@@ -53,7 +54,7 @@ const PrintDrag = () => {
     history.current.push(canvasRef.current.toDataURL());
     currentIndex.current = history.current.length - 1;
   }
-  useEffect(() => {
+  // handle outside click for some box
     function handleClick(e) {
       if (sizeBoxRef.current && !sizeBoxRef.current.contains(e.target)) {
         setBoxSizing(false);
@@ -64,36 +65,61 @@ const PrintDrag = () => {
       }
     }
 
-    function handleBack(imageData) {
+    // handling previous state back
+    function HandleCanvasState(ImageData){
       const canvas = canvasRef.current;
-      let ctx = canvas.getContext('2d');
+      let ctxt = canvas.getContext('2d')
 
       const img = new Image();
-
-      img.src = imageData;
+      img.src = ImageData;
 
       img.onload = ()=>{
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.drawImage(img,0,0)
+        ctxt.clearRect(0,0,canvas.width,canvas.height);
+        ctxt.drawImage(img,0,0);
       }
-
     }
+
+    // download current canvas image
+    function download(index){
+      let canvas = canvasRef.current;
+      let ctx = canvas.getContext('2d');
+      const img = canvas.toDataURL('image/png')
+      const a = document.createElement('a')
+      a.download = "my-signature.png";
+      a.href = img;
+      a.click();
+      alert("downloaded succefully")
+    }
+  useEffect(() => {
+
+    //  by clicking of ctrl and z the action will back
     const handleKeyDown = (e) => {
       if (e.ctrlKey && e.key === "z") {
-        if (currentIndex.current > 0) {
+        console.log('hello')
+        if (currentIndex.current >= 0) {
           currentIndex.current--;
-          handleBack(history.current[currentIndex.current]);
+          HandleCanvasState(history.current[currentIndex.current]);
+        }
+      }
+       // Check for Ctrl + Y
+      if (e.ctrlKey && e.key === 'y') {
+        if (currentIndex.current < history.current.length - 1) {
+          currentIndex.current++;
+          const nextState = history.current[currentIndex.current];
+          HandleCanvasState(nextState);
         }
       }
     };
 
+  //  handling back and again redo
     document.addEventListener("keydown", handleKeyDown);
-
-
+    //  handlingin click on out side all open boxes will close
     document.addEventListener("click", handleClick)
 
     return () => {
       document.removeEventListener("click", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
+
     };
   }, [])
 
@@ -148,7 +174,7 @@ const PrintDrag = () => {
             </div>
 
 
-
+            {/* erase current data on board */}
             <button className='btn btn-light btn-lg' onClick={(e) => { setErase(!erase) }}>
               <i className="fa-solid fa-eraser"></i>
             </button>
@@ -189,6 +215,11 @@ const PrintDrag = () => {
                 </div>
               )}
             </div>
+
+            {/* download current data image */}
+            <button className='btn btn-danger btn-lg' onClick={(e) => { download(currentIndex.current)}}>
+              <i className="fa-solid fa-download"></i>
+            </button>
 
           </div>
         </div>
